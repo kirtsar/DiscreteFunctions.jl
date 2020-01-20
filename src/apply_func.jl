@@ -65,3 +65,20 @@ function (ft :: FunTupling{N, T, D, R})(v) where {N,T,D,R}
     n = length(funs)
     return NTuple{N}(funs[i](v) for i in 1 : n)
 end
+
+
+function (fp :: FunProduct)(v...)
+    return fp(tuple(v...))
+end
+
+
+function (ft :: FunTupling)(v...)
+    return fp(tuple(v...))
+end
+
+
+function proj(f :: CompositeFunction, i)
+    return factors(f)[i]
+end
+
+

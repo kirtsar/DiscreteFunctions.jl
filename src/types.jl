@@ -67,11 +67,11 @@ end
 
 """ 
 direct product of two or more discrete functions
-if we have
-    f1 : D1 → R1
-    f2 : D2 → R2
-        …
-    fk : Dk → Rk
+
+if we have:
+    ``f_1 : D_1 → R_1``
+    `` …``
+    ``f_k : D_k → R_k``
 then FunProduct((f1, …, fk)) is F
     F : D1 × … × Dk → R1 × … × Rk
 """
@@ -118,16 +118,41 @@ end
 function ResidueFunction(max_x :: T, max_y :: S) where {T, S <: Integer}
     dom = segment(max_x)
     rng = segment(max_y)
-    m = zeros(S, len(dom))
+    m = zeros(S, length(dom))
     return ResidueFunction(m, dom, rng)
 end
 
 
 function BooleanFunction(arity :: Int)
-    dom = BooleanCube(arity)
+    dom = BooleanCube(Val(arity))
     rng = segment(2)
     m = zeros(Int, 2^arity)
     return BooleanFunction(m, dom, rng)
+end
+
+
+function BooleanFunction(arity :: Val{N}) where N
+    dom = BooleanCube(arity)
+    rng = segment(2)
+    m = zeros(Int, 2^N)
+    return BooleanFunction(m, dom, rng)
+end
+
+
+function BooleanFunction(v :: Union{NTuple, Vector})
+    n = length(v)
+    nn = Int(log2(n))
+    arity = Val(nn)
+    return BooleanFunction(v, arity)
+end
+
+
+function BooleanFunction(v :: Union{NTuple, Vector}, arity :: Val{N}) where N
+    bf = BooleanFunction(arity)
+    for (i, x) in enumerate(domain(bf))
+        bf[x] = v[i]
+    end
+    return bf
 end
 
 
@@ -159,6 +184,11 @@ function FunTupling(factors)
 end
 
 
-function (f :: Union{FunProduct, FunTupling})(factors...)
-    return f(tuple(factors...))
+function FunProduct(factors...)
+    return FunProduct(tuple(factors...))
+end
+
+
+function FunTupling(factors...)
+    return FunTupling(tuple(factors...))
 end

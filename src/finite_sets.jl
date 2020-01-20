@@ -69,7 +69,12 @@ end
 construct a boolean cube with given number of dimensions
 """
 function BooleanCube(ndim :: Int)
-    itr = DirectProduct(fill(segment(2), ndim)...)
+    return BooleanCube(Val(ndim))
+end
+
+
+function BooleanCube(u :: Val{N}) where N
+    itr = DirectProduct(ntuple(x -> segment(2), u)...)
     return BooleanCube(itr)
 end
 
