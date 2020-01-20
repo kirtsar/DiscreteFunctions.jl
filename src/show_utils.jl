@@ -14,17 +14,30 @@ end
 
 
 function Base.show(io :: IO, bc :: BooleanCube)
-    print(io, "[0, 1]^$(len(bc))")
+    print(io, "[0, 1]^$(ndims(bc))")
 end
 
 
 
-function Base.show(io :: IO, map :: AbstractDiscreteFunction)
-    d = dom(map)
-    r = rng(map)
-    print("Func f : ")
+function Base.show(io :: IO, f :: AbstractDiscreteFunction)
+    d = domain(f)
+    r = codomain(f)
+    print(io, "Func f : ")
     print(io, d)
     print(io, " -> ")
     print(io, r)
-end 
+end
+
+
+function Base.summary(f :: AbstractDiscreteFunction)
+    d = domain(f)
+    r = codomain(f)
+    println("Domain : ", d)
+    println("Codomain : ", r)
+    for x in tablegen(f)
+        println(x)
+    end
+end
+
+
 

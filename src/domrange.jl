@@ -1,4 +1,4 @@
-function dom(m :: AbstractDiscreteFunction)
+#=function dom(m :: AbstractDiscreteFunction)
     return m.dom
 end
 
@@ -19,7 +19,7 @@ end
 function (f :: ResidueFunction)(x)
     return f.m[x + 1]
 end
-
+=#
 
 
 #=
