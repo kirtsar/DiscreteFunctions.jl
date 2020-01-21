@@ -42,6 +42,9 @@ struct BooleanCube{S} <: AbstractProduct
 end
 
 
+const BCube = BooleanCube
+const DProd = DirectProduct
+
 ##############################
 ####### initializers #########
 ##############################

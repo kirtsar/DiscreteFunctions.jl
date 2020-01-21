@@ -117,6 +117,8 @@ const ExtFun = ExtendedResidueFunction
 const BoolFun = BooleanFunction
 const BoolMap = BooleanMap
 const CompFun = CompositeFunction
+const FProd = FunProduct
+const FTuple = FunTupling
 
 
 
@@ -136,70 +138,52 @@ end
 
 
 # ResidueFunction from domain and codomain
-function ResidueFunction(dom :: Segment, codom :: Segment)
-    m = zeros(Int, length(dom))
-    return ResidueFunction(m, dom, codom)
-end
-
+ResFun(dom :: Segment, codom :: Segment) = ResFun(zeros(Int, length(dom)), dom, codom)
 
 # constructing [0..max_x-1] -> [0..max_y-1]
 # input : max_x, max_y
-function ResidueFunction(max_x, max_y)
-    dom = Segment(max_x)
-    codom = Segment(max_y)
-    return ResidueFunction(dom, codom)
-end
+ResFun(max_x, max_y) = ResFun(Segment(max_x), Segment(max_y))
 
 # constructing [0..max_x-1] -> [0..max_y-1]
 # input : (tuple) = (max_x, max_y)
-function ResidueFunction(tup :: Tuple{T, S}) where {T, S <: Integer}
-    return ResidueFunction(tup[1], tup[2])
-end
+ResFun(tup :: Tuple{T, S}) where {T, S <: Integer} = ResFun(tup[1], tup[2])
+
 
 
 # ResidueFunction from domain and codomain
-function ExtendedResidueFunction(dom :: AbstractProduct, codom :: Segment)
-    sizes = size(dom)
-    m = zeros(Int, length(dom))
-    return ExtendedResidueFunction(m, dom, codom, sizes)
-end
-
+ExtFun(dom :: AbstractProduct, codom :: Segment) = ExtFun(zeros(Int, length(dom)), dom, codom, size(dom))
 
 # ResidueFunction from tuple (sizes) and max_y
-function ExtendedResidueFunction(sizes :: NTuple, max_y :: Int)
+function ExtFun(sizes :: NTuple, max_y :: Int)
     dom = DirectProduct(map(Segment, sizes)...)
     codom = Segment(max_y)
-    return ExtendedResidueFunction(dom, codom)
+    return ExtFun(dom, codom)
 end
 
 
 
-function BooleanFunction(arity :: Int)
+function BoolFun(arity :: Int)
     dom = BooleanCube(Val(arity))
     rng = Segment(2)
     m = zeros(Int, 2^arity)
-    return BooleanFunction(m, dom, rng)
+    return BoolFun(m, dom, rng)
 end
 
 
-function BooleanFunction(arity :: Val{N}) where N
+function BoolFun(arity :: Val{N}) where N
     dom = BooleanCube(arity)
     rng = Segment(2)
     m = zeros(Int, 2^N)
-    return BooleanFunction(m, dom, rng)
+    return BoolFun(m, dom, rng)
 end
 
-
-function BooleanFunction(v :: Union{NTuple, Vector})
-    n = length(v)
-    nn = Int(log2(n))
-    arity = Val(nn)
-    return BooleanFunction(v, arity)
+function BoolFun(v :: Union{NTuple, Vector})
+    arity = Val(Int(log2(length(v))))
+    return BoolFun(v, arity)
 end
 
-
-function BooleanFunction(v :: Union{NTuple, Vector}, arity :: Val{N}) where N
-    bf = BooleanFunction(arity)
+function BoolFun(v :: Union{NTuple, Vector}, arity :: Val{N}) where N
+    bf = BoolFun(arity)
     for (i, x) in enumerate(domain(bf))
         bf[x] = v[i]
     end
@@ -221,48 +205,48 @@ function OffsetPerm(v)
 end
 
 
-function FunProduct(factors)
+function FProd(factors)
     dom = DirectProduct(map(domain, factors))
     rng = DirectProduct(map(codomain, factors))
-    return FunProduct(factors, dom, rng)
+    return FProd(factors, dom, rng)
 end
 
 
-function FunTupling(factors)
+function FTuple(factors)
     dom = domain(first(factors))
     rng = DirectProduct(map(codomain, factors))
-    return FunTupling(factors, dom, rng)
+    return FTuple(factors, dom, rng)
 end
 
 
 # creating functional product from two tuples
 # of equal length!
 
-function FunProduct(from :: NTuple{N, Int}, to :: NTuple{N, Int}) where N
+function FProd(from :: NTuple{N, Int}, to :: NTuple{N, Int}) where N
     fromto = zip(from, to)
     funs = tuple(map(ResidueFunction, fromto)...)
-    return FunProduct(funs)
+    return FProd(funs)
 end
 
 
 # creating functional product from dom and codom
 
-function FunProduct(dom :: AbstractProduct, codom :: AbstractProduct)
+function FProd(dom :: AbstractProduct, codom :: AbstractProduct)
     fromto = zip(from, to)
     funs = tuple(map(ResidueFunction, fromto)...)
-    return FunProduct(funs)
+    return FProd(funs)
 end
 
 # creating functional tupling from two tuples
 # not necessarily equal length !
 
-function FunTupling(from :: NTuple{N, Int}, to :: NTuple{M, Int}) where N where M
+function FTuple(from :: NTuple{N, Int}, to :: NTuple{M, Int}) where N where M
     funs = tuple(map(x -> ExtendedResidueFunction(from, x), to)...)
-    return FunTupling(funs)
+    return FTuple(funs)
 end
 
-FunProduct(factors...) = FunProduct(tuple(factors...))
-FunTupling(factors...) = FunTupling(tuple(factors...))
+FProd(factors...) = FProd(tuple(factors...))
+FTuple(factors...) = FTuple(tuple(factors...))
 
 # number of functions 
 size(comp :: CompositeFunction) = length(fp.factors)

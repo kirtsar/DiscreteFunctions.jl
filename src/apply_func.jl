@@ -6,9 +6,10 @@ rng(m :: AbstractDiscreteFunction) = codomain(m)
 
 """
 return factors (f1, ..., fp) for composite function,
-that is : functional product of functional tupling
 """
 factors(fp :: CompositeFunction) = fp.factors
+
+
 # apply different discrete function
 (df :: DiscreteFunction)(x) = f.m[x]
 (f :: ResidueFunction)(x :: Integer) = f.m[x + 1]
@@ -27,14 +28,14 @@ end
 (p :: OffsetPerm)(x) = p.m[x+1]
 
 
-function (fp :: FunProduct{N, T, D, R})(v) where {N,T,D,R}
+function (fp :: FProd{N, T, D, R})(v) where {N,T,D,R}
     funs = factors(fp)
     n = length(v)
     return NTuple{N}(funs[i](v[i]) for i in 1 : n)
 end
 
 
-function (ft :: FunTupling{N, T, D, R})(v) where {N,T,D,R}
+function (ft :: FTuple{N, T, D, R})(v) where {N,T,D,R}
     funs = factors(ft)
     n = length(funs)
     return NTuple{N}(funs[i](v) for i in 1 : n)
@@ -43,8 +44,8 @@ end
 
 # short concise syntax f(x1, .., xn)
 (f :: BooleanFunction)(x...) = f(tuple(x...))
-(fp :: FunProduct)(v...) = fp(tuple(v...))
-(ft :: FunTupling)(v...) = fp(tuple(v...))
+(fp :: FProd)(v...) = fp(tuple(v...))
+(ft :: FTuple)(v...) = fp(tuple(v...))
 
 proj(f :: CompositeFunction, i) = factors(f)[i]
 Base.getindex(f :: CompositeFunction, i) = proj(f, i)
@@ -64,14 +65,14 @@ function Base.setindex!(f :: BooleanFunction, v, k)
     f.m[ind + 1] = v
 end
 
-function Base.setindex!(fp :: FunProduct, v :: NTuple, k :: NTuple)
+function Base.setindex!(fp :: FProd, v :: NTuple, k :: NTuple)
     fs = factors(fp)
     for i in 1 : nfuns(fp)
         fs[i][k[i]] = v[i]
     end
 end
 
-function Base.setindex!(ft :: FunTupling, v :: NTuple, k)
+function Base.setindex!(ft :: FTuple, v :: NTuple, k)
     fs = factors(ft)
     for (i, val) in enumerate(v)
         fs[i][k] = val
