@@ -3,9 +3,15 @@
 #########################################
 
 abstract type AbstractFiniteSet end
-abstract type AbstractSegment <: AbstractFiniteSet end
-abstract type AbstractProduct <: AbstractFiniteSet end
+const FinSet = AbstractFiniteSet
 
+abstract type AbstractSegment <: FinSet end
+abstract type AbstractProduct <: FinSet end
+
+
+##############################
+####### T Y P E S ############
+##############################
 
 """
 Finite set {0, .., k-1}
@@ -14,32 +20,12 @@ struct Segment{T} <: AbstractSegment
     itr :: UnitRange{T}
 end
 
-
 """
 Finite set {c, .., c + k-1}
 """
 struct ShiftedSegment{T} <: AbstractSegment
     itr :: UnitRange{T}
 end
-
-
-"""
-Returns Segment [0..k-1]
-"""
-function segment(k :: Int)
-    itr = 0 : (k-1)
-    return Segment(itr)
-end
-
-
-"""
-Returns Segment [start..finish]
-"""
-function segment(start, finish)
-    itr = start : finish
-    return ShiftedSegment(itr)
-end
-
 
 """
 direct product of two or more sets
@@ -48,16 +34,6 @@ struct DirectProduct{T} <: AbstractProduct
     itr :: T
 end
 
-
-"""
-return direct product of finite sets x...
-"""
-function DirectProduct(x...)
-    itr = product(x...)
-    return DirectProduct(itr)
-end
-
-
 """
 Finite set {0,1} × ... × {0,1}
 """
@@ -65,16 +41,52 @@ struct BooleanCube{S} <: AbstractProduct
     itr :: S
 end
 
+
+##############################
+####### initializers #########
+##############################
+
+
+# Segment initializers
+
+"""
+Construct a Segment [0..k-1]
+"""
+Segment(k :: Int) = Segment(0 : (k-1))
+
+"""
+Construct a Segment [start..finish]
+"""
+Segment(start, finish) = ShiftedSegment(start : finish)
+
+
+# Direct product INITIALIZERS
+
+"""
+return direct product of finite sets xs
+"""
+DirectProduct(xs...) = DirectProduct(product(xs...))
+
+# from vector/tuple of finite sets
+function DirectProduct(v :: Union{Vector{T}, NTuple{N, T}}) where T <: FinSet where N
+    return DirectProduct(v...)
+end
+
+# from vector/tuple of Integers
+function DirectProduct(v :: Union{Vector{T}, NTuple{N, T}}) where T <: Integer where N
+    dom = map(Segment, v)
+    return DirectProduct(dom)
+end
+
+# Boolean cube INITIALIZERS
+
 """
 construct a boolean cube with given number of dimensions
 """
-function BooleanCube(ndim :: Int)
-    return BooleanCube(Val(ndim))
-end
-
+BooleanCube(ndim :: Int) = BooleanCube(Val(ndim))
 
 function BooleanCube(u :: Val{N}) where N
-    itr = DirectProduct(ntuple(x -> segment(2), u)...)
+    itr = DirectProduct(ntuple(x -> Segment(2), u)...)
     return BooleanCube(itr)
 end
 
@@ -82,68 +94,36 @@ end
 # iteration utilities #
 #######################
 
-function Base.first(s :: AbstractSegment)
-    return first(s.itr)
-end
+Base.first(s :: AbstractSegment) = first(s.itr)
+Base.last(s :: AbstractSegment) = last(s.itr)
+Base.iterate(s :: FinSet) = iterate(s.itr)
+Base.iterate(s :: FinSet, state) = iterate(s.itr, state)
 
-
-function Base.last(s :: AbstractSegment)
-    return last(s.itr)
-end
-
-
-function Base.iterate(s :: AbstractFiniteSet) 
-    return iterate(s.itr)
-end
-
-
-function Base.iterate(s :: AbstractFiniteSet, state)
-    return iterate(s.itr, state)
-end
-
-
-# special iteration protocol for direct product
+# special iteration protocol for BooleanCube
 # because we want the boolean cube to be like:
 # (0, 0, ..., 0), (0, 0, ..., 1)
 # and not (0, 0, ..., 0), (1, 0, ..., 0)
 # (lexicografic order matters here)
 
-
-function Base.iterate(dp :: DirectProduct)
-    p = iterate(dp.itr)
+function Base.iterate(bc :: BooleanCube)
+    p = iterate(bc.itr)
     res = _try_reverse(p)
     return res
 end
 
-
-function Base.iterate(dp :: DirectProduct, state)
-    p = iterate(dp.itr, state)
+function Base.iterate(bc :: BooleanCube, state)
+    p = iterate(bc.itr, state)
     res = _try_reverse(p)
     return res
 end
 
+_try_reverse(p :: Nothing) = nothing
+_try_reverse(p) = (reverse(first(p)), last(p)) 
 
-function _try_reverse(p :: Nothing)
-    return nothing
-end
+Base.length(s :: FinSet) = length(s.itr)
+Base.ndims(s :: FinSet) = ndims(s.itr)
+Base.size(s :: FinSet) = size(s.itr)
 
-
-function _try_reverse(p)
-    return (reverse(first(p)), last(p)) 
-end
-
-
-function factors(dp :: DirectProduct)
-    return dp.itr.iterators
-end
-
-
-function Base.length(s :: AbstractFiniteSet)
-    return length(s.itr)
-end
-
-
-function Base.ndims(s :: AbstractFiniteSet)
-    return ndims(s.itr)
-end
-
+proj(dp :: DirectProduct, i) = dp.itr.iterators[i]
+Base.getindex(dp :: DirectProduct, i :: Int) = proj(dp, i)
+factors(dp :: DirectProduct) = dp.itr.iterators

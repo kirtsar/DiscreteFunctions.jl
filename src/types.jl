@@ -24,6 +24,19 @@ end
 
 
 """
+function of the type 
+ℤ_k1 × … × ℤ_km → ℤ_l
+represened internally as array of integers 
+"""
+struct ExtendedResidueFunction{T, N} <: BasicDiscreteFunction
+    m :: Vector{Int}
+    dom :: DirectProduct{T}
+    rng :: Segment{Int}
+    sizes :: NTuple{N, Int}
+end
+
+
+"""
 Boolean functions of the type B^n -> B
 """
 struct BooleanFunction{T, S} <: BasicDiscreteFunction
@@ -31,6 +44,7 @@ struct BooleanFunction{T, S} <: BasicDiscreteFunction
     dom :: BooleanCube{S}
     rng :: Segment{Int}
 end
+
 
 
 """
@@ -62,8 +76,6 @@ struct OffsetPerm{T <: Integer} <: BasicDiscreteFunction
     dom :: Segment{Int}
     rng :: Segment{Int}
 end
-
-
 
 """ 
 direct product of two or more discrete functions
@@ -99,6 +111,14 @@ struct FunTupling{N, T, D, R} <: CompositeFunction
 end
 
 
+const DFun = DiscreteFunction
+const ResFun = ResidueFunction
+const ExtFun = ExtendedResidueFunction
+const BoolFun = BooleanFunction
+const BoolMap = BooleanMap
+const CompFun = CompositeFunction
+
+
 
 ##############################
 # STANDARD CONSTRUCTORS ######
@@ -109,23 +129,54 @@ function DiscreteFunction(d :: Dict{A, B}) where {A, B}
     max_x = maximum(keys(d))
     min_y = minimum(values(d))
     max_y = maximum(values(d))
-    D = segment(min_x, max_x)
-    R = segment(min_y, max_y)
+    D = Segment(min_x, max_x)
+    R = Segment(min_y, max_y)
     return DiscreteFunction(d, D, R)
 end
 
 
-function ResidueFunction(max_x :: T, max_y :: S) where {T, S <: Integer}
-    dom = segment(max_x)
-    rng = segment(max_y)
-    m = zeros(S, length(dom))
-    return ResidueFunction(m, dom, rng)
+# ResidueFunction from domain and codomain
+function ResidueFunction(dom :: Segment, codom :: Segment)
+    m = zeros(Int, length(dom))
+    return ResidueFunction(m, dom, codom)
 end
+
+
+# constructing [0..max_x-1] -> [0..max_y-1]
+# input : max_x, max_y
+function ResidueFunction(max_x, max_y)
+    dom = Segment(max_x)
+    codom = Segment(max_y)
+    return ResidueFunction(dom, codom)
+end
+
+# constructing [0..max_x-1] -> [0..max_y-1]
+# input : (tuple) = (max_x, max_y)
+function ResidueFunction(tup :: Tuple{T, S}) where {T, S <: Integer}
+    return ResidueFunction(tup[1], tup[2])
+end
+
+
+# ResidueFunction from domain and codomain
+function ExtendedResidueFunction(dom :: AbstractProduct, codom :: Segment)
+    sizes = size(dom)
+    m = zeros(Int, length(dom))
+    return ExtendedResidueFunction(m, dom, codom, sizes)
+end
+
+
+# ResidueFunction from tuple (sizes) and max_y
+function ExtendedResidueFunction(sizes :: NTuple, max_y :: Int)
+    dom = DirectProduct(map(Segment, sizes)...)
+    codom = Segment(max_y)
+    return ExtendedResidueFunction(dom, codom)
+end
+
 
 
 function BooleanFunction(arity :: Int)
     dom = BooleanCube(Val(arity))
-    rng = segment(2)
+    rng = Segment(2)
     m = zeros(Int, 2^arity)
     return BooleanFunction(m, dom, rng)
 end
@@ -133,7 +184,7 @@ end
 
 function BooleanFunction(arity :: Val{N}) where N
     dom = BooleanCube(arity)
-    rng = segment(2)
+    rng = Segment(2)
     m = zeros(Int, 2^N)
     return BooleanFunction(m, dom, rng)
 end
@@ -158,37 +209,60 @@ end
 
 function Perm(v)
     k = maximum(v)
-    dom = segment(1, k)
+    dom = Segment(1, k)
     return Perm(v, dom, dom)
 end
 
 
 function OffsetPerm(v)
     k = maximum(v)
-    dom = segment(k)
+    dom = Segment(k)
     return OffsetPerm(v, dom, dom)
 end
 
 
 function FunProduct(factors)
-    dom = DirectProduct(map(domain, factors)...)
-    rng = DirectProduct(map(codomain, factors)...)
+    dom = DirectProduct(map(domain, factors))
+    rng = DirectProduct(map(codomain, factors))
     return FunProduct(factors, dom, rng)
 end
 
 
 function FunTupling(factors)
     dom = domain(first(factors))
-    rng = DirectProduct(map(codomain, factors)...)
+    rng = DirectProduct(map(codomain, factors))
     return FunTupling(factors, dom, rng)
 end
 
 
-function FunProduct(factors...)
-    return FunProduct(tuple(factors...))
+# creating functional product from two tuples
+# of equal length!
+
+function FunProduct(from :: NTuple{N, Int}, to :: NTuple{N, Int}) where N
+    fromto = zip(from, to)
+    funs = tuple(map(ResidueFunction, fromto)...)
+    return FunProduct(funs)
 end
 
 
-function FunTupling(factors...)
-    return FunTupling(tuple(factors...))
+# creating functional product from dom and codom
+
+function FunProduct(dom :: AbstractProduct, codom :: AbstractProduct)
+    fromto = zip(from, to)
+    funs = tuple(map(ResidueFunction, fromto)...)
+    return FunProduct(funs)
 end
+
+# creating functional tupling from two tuples
+# not necessarily equal length !
+
+function FunTupling(from :: NTuple{N, Int}, to :: NTuple{M, Int}) where N where M
+    funs = tuple(map(x -> ExtendedResidueFunction(from, x), to)...)
+    return FunTupling(funs)
+end
+
+FunProduct(factors...) = FunProduct(tuple(factors...))
+FunTupling(factors...) = FunTupling(tuple(factors...))
+
+# number of functions 
+size(comp :: CompositeFunction) = length(fp.factors)
