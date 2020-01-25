@@ -1,60 +1,42 @@
 abstract type AbstractDiscreteFunction end
-abstract type CompositeFunction <: AbstractDiscreteFunction end
-abstract type BasicDiscreteFunction <: AbstractDiscreteFunction end
-
-"""
-generic type for discrete function Dom -> Rng
-"""
-struct DiscreteFunction{D <: AbstractFiniteSet, R <: AbstractFiniteSet, A, B} <: AbstractDiscreteFunction
-    m :: Dict{A, B}
-    dom :: D
-    rng :: R
-end
+const ADFun = AbstractDiscreteFunction
+abstract type CompositeFunction <: ADFun end
+abstract type BasicFunction <: ADFun end
 
 
-"""
-function of the type {0, .., k-1} -> {0, ..., l-1} 
-represened internally as array of integers 
-"""
-struct ResidueFunction <: BasicDiscreteFunction
-    m :: Vector{Int}
-    dom :: Segment{Int}
-    rng :: Segment{Int}
-end
+# INTERFACES
 
+# iterator for domain
+domain(m :: ADFun) = error("not implemented")
+# iterator for codomain
+codomain(m :: ADFun) = error("not implemented")
+# basic constructor from domain and codomain
+(adf :: ADFun)(dom :: FinSet, cod :: FinSet) = error("not implemented")
 
 """
-function of the type 
-ℤ_k1 × … × ℤ_km → ℤ_l
-represened internally as array of integers 
+return factors (f1, ..., fp) for composite function,
 """
-struct ExtendedResidueFunction{T, N} <: BasicDiscreteFunction
-    m :: Vector{Int}
-    dom :: DirectProduct{T}
-    rng :: Segment{Int}
-    sizes :: NTuple{N, Int}
-end
+factors(fp :: CompositeFunction) = error("not implemented")
 
 
-"""
-Boolean functions of the type B^n -> B
-"""
-struct BooleanFunction{T, S} <: BasicDiscreteFunction
-    m :: Vector{T}
-    dom :: BooleanCube{S}
-    rng :: Segment{Int}
-end
+rng(m :: AbstractDiscreteFunction) = codomain(m)
 
 
 
-"""
-Boolean map of type B^n -> B^m
-"""
-struct BooleanMap{T} <: AbstractDiscreteFunction
-    m :: Matrix{T}
-    dom :: BooleanCube{Int}
-    rng :: Segment{Int}
-end
+# number of functions 
+size(comp :: CompositeFunction) = length(comp.factors)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -111,11 +93,7 @@ struct FunTupling{N, T, D, R} <: CompositeFunction
 end
 
 
-const DFun = DiscreteFunction
-const ResFun = ResidueFunction
-const ExtFun = ExtendedResidueFunction
-const BoolFun = BooleanFunction
-const BoolMap = BooleanMap
+
 const CompFun = CompositeFunction
 const FProd = FunProduct
 const FTuple = FunTupling
@@ -232,9 +210,12 @@ end
 # creating functional product from dom and codom
 
 function FProd(dom :: AbstractProduct, codom :: AbstractProduct)
-    fromto = zip(from, to)
-    funs = tuple(map(ResidueFunction, fromto)...)
-    return FProd(funs)
+    #fromto = zip(from, to)
+    #funs = tuple(map(ResidueFunction, fromto)...)
+    #return FProd(funs)
+    from = size(dom)
+    to = size(codom)
+    return FProd(from, to)
 end
 
 # creating functional tupling from two tuples
@@ -245,8 +226,19 @@ function FTuple(from :: NTuple{N, Int}, to :: NTuple{M, Int}) where N where M
     return FTuple(funs)
 end
 
+
+# creating functional product from dom and codom
+
+function FTuple(dom :: AbstractProduct, codom :: AbstractProduct)
+    #fromto = zip(from, to)
+    #funs = tuple(map(ResidueFunction, fromto)...)
+    #return FProd(funs)
+    from = size(dom)
+    to = size(codom)
+    return FTuple(from, to)
+end
+
+
+
 FProd(factors...) = FProd(tuple(factors...))
 FTuple(factors...) = FTuple(tuple(factors...))
-
-# number of functions 
-size(comp :: CompositeFunction) = length(fp.factors)

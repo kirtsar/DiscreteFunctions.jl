@@ -43,9 +43,7 @@ end
 
 
 # short concise syntax f(x1, .., xn)
-(f :: BooleanFunction)(x...) = f(tuple(x...))
-(fp :: FProd)(v...) = fp(tuple(v...))
-(ft :: FTuple)(v...) = fp(tuple(v...))
+(fs :: Union{FProd, FTuple, BooleanFunction})(v...) = fs(tuple(v...))
 
 proj(f :: CompositeFunction, i) = factors(f)[i]
 Base.getindex(f :: CompositeFunction, i) = proj(f, i)
@@ -67,7 +65,7 @@ end
 
 function Base.setindex!(fp :: FProd, v :: NTuple, k :: NTuple)
     fs = factors(fp)
-    for i in 1 : nfuns(fp)
+    for i in 1 : size(fp)
         fs[i][k[i]] = v[i]
     end
 end

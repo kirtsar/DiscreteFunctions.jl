@@ -39,7 +39,7 @@ end
 generate all product-type functions:
 D1 × … × Dk → R1 × … × Rk
 """
-struct FunProductGenerator{IT, N, T, D, R}
+struct FunProductGenerator{IT, N, T, D, R} <: DFGen
     itr :: IT
     f :: FunProduct{N, T, D, R}
 end
@@ -80,7 +80,7 @@ BoolGen(bc :: BooleanCube) = BoolGen(ndims(bc))
 # from two integers [0 .. from-1] → [0 .. to-1]
 function ResGen(from :: T, to :: T) where T <: Integer
     itr = 0 : (to^from - 1)
-    f = ResGen(from, to)
+    f = ResFun(from, to)
     return ResGen(itr, f, from, to)
 end
 #from two segments
@@ -107,7 +107,7 @@ function FPGen(dom :: AbstractProduct, codom :: AbstractProduct)
     n = ndims(dom)
     funs = Tuple(ResFun(dom[i], codom[i]) for i in 1 : n)
     tup = Tuple(nfuns(dom[i], codom[i]) for i in 1 : n)
-    itr = product(Segment.(tup)...)
+    itr = Iterators.product(Segment.(tup)...)
     f = FunProduct(funs)
     return FPGen(itr, f)
 end
@@ -123,11 +123,13 @@ end
 # Function Tupling generators #
 # from domain and codomain
 function FTGen(dom :: AbstractProduct, codom :: AbstractProduct)
+    from = size(dom)
+    to = size(codom)
     n = ndims(codom)
-    funs = Tuple(ExtFun(dom, codom[i]) for i in 1 : n)
+    #funs = Tuple(ExtFun(dom, codom[i]) for i in 1 : n)
     tup = Tuple(nfuns(dom, codom[i]) for i in 1 : n)
     itr = product(Segment.(tup)...)
-    f = FunTupling(funs)
+    f = FunTupling(from, to)
     return FTGen(itr, f)
 end
 
@@ -155,7 +157,7 @@ function itstep(ctr, gen :: ARGen)
     return (gen.f, state)
 end
 
-function iter_step(ctr, gen :: FPGen)
+function itstep(ctr, gen :: FPGen)
     value = ctr[1]
     state = ctr[2]
     mods = size(domain(gen.f))
@@ -193,8 +195,14 @@ itstep(n :: Nothing, gen :: FPGen) = nothing
 
 
 # other useful functions #
-Base.length(gen :: DFGen) = length(gen.itr)
+Base.length(gen :: DFGen) = prod(big.(length.(gen.itr.iterators)))
 # number of functions A → B
 nfuns(dom :: FinSet, codom :: FinSet) = length(codom)^(length(dom))
 domain(gen :: DFGen) = domain(gen.f)
 codomain(gen :: DFGen) = codomain(gen.f)
+
+
+# get n'th element of iterator
+function Base.getindex(gen :: DFGen, i :: Int)
+    return nth(gen, i)
+end

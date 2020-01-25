@@ -1,10 +1,11 @@
 module DF
 
 using Base.Iterators
+import IterTools: nth
 
-import Base.show, Base.first, Base.last, Base.iterate
-import Base.size, Base.length, Base.ndims
-import Base.summary, Base.getindex, Base.setindex!
+import Base: show, first, last, iterate, size, length, ndims,
+              summary, getindex, setindex!, ∘
+#import Base.∘
 
 export Segment, DirectProduct, BooleanCube
 export DiscreteFunction, ResidueFunction, ExtendedResidueFunction, BooleanFunction
@@ -26,5 +27,6 @@ include("show_utils.jl")
 include("apply_func.jl")
 include("helper_utils.jl")
 include("generators.jl")
+include("compositions.jl")
 
 end # module
