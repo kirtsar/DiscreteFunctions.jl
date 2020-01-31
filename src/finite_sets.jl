@@ -40,3 +40,21 @@ Base.getindex(aprod :: AbstractProduct, i) = proj(aprod, i)
 include("finsets/segment.jl")
 include("finsets/direct_prod.jl")
 include("finsets/bool_cube.jl")
+
+
+
+
+
+function Base.show(io :: IO, s :: AbstractSegment)
+    print(io, "[", first(s), "..", last(s), "]")
+end
+
+
+function Base.show(io :: IO, dp :: DirectProduct)
+    res = ""
+    for x in factors(dp)
+        res *= repr(x)
+        res *= "×"
+    end
+    print(io, res[1 : end-1])
+end

@@ -6,7 +6,6 @@ struct DiscreteFunction{D <: AbstractFiniteSet, R <: AbstractFiniteSet, A, B} <:
     dom :: D
     rng :: R
 end
-
 const DFun = DiscreteFunction
 
 function DiscreteFunction(d :: Dict{A, B}) where {A, B}
@@ -21,3 +20,6 @@ end
 
 domain(df :: DiscreteFunction) = df.dom
 codomain(df :: DiscreteFunction) = df.rng
+
+(df :: DiscreteFunction)(x) = f.m[x]
+Base.setindex!(f :: DiscreteFunction, value, key) = setindex!(f.m, value, key)

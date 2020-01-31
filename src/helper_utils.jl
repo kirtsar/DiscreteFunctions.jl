@@ -34,24 +34,3 @@ function fill_numbers!(v, x; base :: Int)
         x = div(x, base)
     end
 end
-
-# returns all pairs (x->f(x))
-function table(f :: AbstractDiscreteFunction)
-    d = domain(f)
-    res = [x => f(x) for x in d]
-    return res
-end
-
-# returns generator of type x => f(x)
-function tablegen(f :: AbstractDiscreteFunction)
-    d = domain(f)
-    res = (x => f(x) for x in d)
-    return res
-end
-
-# returns all pairs (x->f(x))
-function tabledict(f :: AbstractDiscreteFunction)
-    d = domain(f)
-    res = Dict(x => f(x) for x in d)
-    return res
-end

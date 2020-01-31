@@ -2,44 +2,74 @@
 Finite set {0,1} × ... × {0,1}
 """
 struct BooleanCube{S} <: AbstractProduct
-    itr :: S
+    itr :: UnitRange{S}
+    n :: Int
 end
+const BoolCube = BooleanCube
 const BCube = BooleanCube
-
 
 """
 construct a boolean cube with given number of dimensions
 """
-BooleanCube(ndim :: Int) = BooleanCube(Val(ndim))
+BCube(n :: Int) = BCube(0:(2^n - 1), n)
 
-function BooleanCube(u :: Val{N}) where N
-    itr = DirectProduct(ntuple(x -> Segment(2), u)...)
-    return BooleanCube(itr)
+#### Boolean vectors
+
+struct BooleanVector
+    k :: Int
+    n :: Int
+end
+const BoolVec = BooleanVector
+const BooleanVec = BooleanVector
+
+value(v :: BoolVec) = v.k
+
+function Base.getindex(v :: BoolVec, i :: Int)
+    n = ndims(v)
+    return (value(v) >> (n - i)) & 1 
 end
 
 # INTERFACE
-iterator(bc :: BooleanCube) = bc.itr
+iterator(bc :: BCube) = bc.itr
+Base.ndims(bc :: BCube) = bc.n
+Base.ndims(v :: BoolVec) = v.n
+factors(bc :: BCube) = tuple(fill(0:1, ndims(bc))...)
 
 
-# special iteration protocol for BooleanCube
-# because we want the boolean cube to be like:
-# (0, 0, ..., 0), (0, 0, ..., 1)
-# and not (0, 0, ..., 0), (1, 0, ..., 0)
-# (lexicografic order matters here)
+# Iteration utilities
+postprocess(:: Nothing, n) = nothing
+postprocess(p, n) = (BoolVec(p[1], n), p[2])
 
-function Base.iterate(bc :: BooleanCube)
+function Base.iterate(bc :: BCube)
     p = iterate(bc.itr)
-    res = _try_reverse(p)
-    return res
+    return postprocess(p, ndims(bc))
 end
 
-function Base.iterate(bc :: BooleanCube, state)
+function Base.iterate(bc :: BCube, state)
     p = iterate(bc.itr, state)
-    res = _try_reverse(p)
-    return res
+    return postprocess(p, ndims(bc))
 end
 
-_try_reverse(p :: Nothing) = nothing
-_try_reverse(p) = (reverse(first(p)), last(p)) 
 
-factors(bc :: BooleanCube) = tuple(fill(0:1, length(bc))...)
+# change representation from binary to BoolVec
+function (bc :: BoolCube)(x :: NTuple)
+    n = ndims(bc)
+    res = 0
+    for i in 1 : n
+        res <<= 1
+        res |= x[i]
+    end
+    return BoolVec(res, n)
+end
+
+
+
+
+# show utilities
+Base.show(io :: IO, bc :: BooleanCube) = print(io, "[0, 1]^$(ndims(bc))")
+
+function Base.show(io :: IO, v :: BoolVec)
+    n = ndims(v) - 1
+    s = bitstring(value(v))[end - n : end]
+    print(io, "[", s, ']')
+end

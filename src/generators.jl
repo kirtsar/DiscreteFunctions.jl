@@ -8,9 +8,9 @@ const ARGen = AbstractResidueGenerator
 """
 Generates all boolean function of arity = n
 """
-struct BooleanGenerator{F, S} <: DiscreteFunctionGenerator
+struct BooleanGenerator{F} <: DiscreteFunctionGenerator
     itr :: UnitRange{Int}
-    f :: BooleanFunction{F, S}
+    f :: BooleanFunction{F}
 end
 
 """
