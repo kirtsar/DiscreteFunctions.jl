@@ -4,7 +4,7 @@ using Base.Iterators
 import IterTools: nth
 
 import Base: show, first, last, iterate, size, length, ndims,
-              summary, getindex, setindex!, ∘
+              summary, getindex, setindex!, ∘, iszero
 #import Base.∘
 
 export Segment, DirectProduct, BooleanCube
@@ -27,4 +27,5 @@ include("helper_utils.jl")
 include("generators.jl")
 include("compositions.jl")
 
+include("boolean/boolean_utils.jl")
 end # module

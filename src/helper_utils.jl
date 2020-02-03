@@ -34,3 +34,14 @@ function fill_numbers!(v, x; base :: Int)
         x = div(x, base)
     end
 end
+
+# set bits with numbers vs[1],
+# ..., vs[k] to 1
+# return 2^(vs[1] - 1) + ... + 2^(vs[k] - 1)
+function set_bits(vs)
+    res = 0
+    for num in vs
+        res += 2^(num - 1)
+    end
+    return res
+end

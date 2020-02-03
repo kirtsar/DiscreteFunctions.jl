@@ -1,7 +1,9 @@
+abstract type AbstactBoolean <: BasicDiscreteFunction end
+
 """
 Boolean functions of the type B^n -> B
 """
-struct BooleanFunction{T} <: BasicDiscreteFunction
+struct BooleanFunction{T} <: AbstactBoolean
     m :: T
     dom :: BCube{Int}
     rng :: BCube{Int}
@@ -10,24 +12,44 @@ end
 """
 Boolean map of type B^n -> B^m
 """
-struct BooleanMap{T} <: AbstractDiscreteFunction
+struct BooleanMap{T} <: AbstactBoolean
     m :: Matrix{T}
     dom :: BCube{Int}
     rng :: BCube{Int}
 end
 
+
+"""
+Generic Boolean
+"""
+struct BooleanDiscrete{T, S} <: AbstactBoolean
+    m :: T
+    dom :: BCube{Int}
+    rng :: S
+end
+
+
 const BoolFun = BooleanFunction
 const BoolMap = BooleanMap
 
 
-domain(bf :: BoolFun) = bf.dom
-codomain(bf :: BoolFun) = bf.rng
+domain(bf :: AbstactBoolean) = bf.dom
+codomain(bf :: AbstactBoolean) = bf.rng
 
 # standard constructor from domain
 function BoolFun(bc :: BCube)
     m = zeros(Int, length(bc))
     rng = BCube(1)
     return BoolFun(m, bc, rng)
+end
+
+# to be implemented
+function BoolMap(dom :: BCube, rng :: BCube) end
+
+function BooleanDiscrete(bc :: BCube)
+    m = zeros(Int, length(bc))
+    rng = Val(Int)
+    return BooleanDiscrete(m, bc, rng)
 end
 
 # construct from arity - number
@@ -45,16 +67,16 @@ function BoolFun(vals :: Union{NTuple, Vector})
 end
 
 # application - to BoolVec
-(f :: BoolFun)(v :: BoolVec) = f.m[value(v) + 1]
+(f :: AbstactBoolean)(v :: BoolVec) = f.m[value(v) + 1]
 # application - to Iterable
-function (f :: BoolFun)(it :: Union{NTuple, Vector})
+function (f :: AbstactBoolean)(it :: Union{NTuple, Vector})
     x = domain(f)(it)
     return f(x)
 end
 # application - to bunch of numbers
-(fs :: BoolFun)(v...) = fs(tuple(v...))
+(fs :: AbstactBoolean)(v...) = fs(tuple(v...))
 
-Base.setindex!(f :: BoolFun, v, k :: BoolVec) = (f.m[value(k) + 1] = v)
-Base.setindex!(f :: BoolFun, v, k) = (f[domain(f)(k)] = v)
-Base.setindex!(f :: BoolFun, v, k...) = (f[tuple(k...)] = v)
+Base.setindex!(f :: AbstactBoolean, v, k :: BoolVec) = (f.m[value(k) + 1] = v)
+Base.setindex!(f :: AbstactBoolean, v, k) = (f[domain(f)(k)] = v)
+Base.setindex!(f :: AbstactBoolean, v, k...) = (f[tuple(k...)] = v)
 

@@ -22,7 +22,13 @@ end
 const BoolVec = BooleanVector
 const BooleanVec = BooleanVector
 
+BoolVec(vs) = BoolVec(itr2bin(vs), length(vs))
+
 value(v :: BoolVec) = v.k
+
+# v1 <= v2 in lexicographic order?
+Base.isless(v1 :: BoolVec, v2 :: BoolVec) = (value(v1) & value(v2) == value(v1))
+
 
 function Base.getindex(v :: BoolVec, i :: Int)
     n = ndims(v)
@@ -33,6 +39,7 @@ end
 iterator(bc :: BCube) = bc.itr
 Base.ndims(bc :: BCube) = bc.n
 Base.ndims(v :: BoolVec) = v.n
+Base.length(v :: BoolVec) = ndims(v)
 factors(bc :: BCube) = tuple(fill(0:1, ndims(bc))...)
 
 
@@ -50,18 +57,14 @@ function Base.iterate(bc :: BCube, state)
     return postprocess(p, ndims(bc))
 end
 
+Base.iterate(v :: BoolVec) = (v[1], 2)
+Base.iterate(v :: BoolVec, i :: Int) = i > ndims(v) ? nothing : (v[i], i+1)
+
 
 # change representation from binary to BoolVec
-function (bc :: BoolCube)(x :: NTuple)
-    n = ndims(bc)
-    res = 0
-    for i in 1 : n
-        res <<= 1
-        res |= x[i]
-    end
-    return BoolVec(res, n)
-end
+(bc :: BoolCube)(x :: NTuple) = BoolVec(x)
 
+dot(v1 :: BoolVec, v2 :: BoolVec) = sum(collect(v1) .* collect(v2)) % 2
 
 
 
