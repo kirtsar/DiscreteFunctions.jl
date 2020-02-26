@@ -27,7 +27,6 @@ size(comp :: CompositeFunction) = length(comp.factors)
 
 include("dfuns/generic.jl")
 include("dfuns/residue_fun.jl")
-include("dfuns/bool_fun.jl")
 include("dfuns/fun_product.jl")
 include("dfuns/fun_tupling.jl")
 

@@ -19,16 +19,16 @@ factors(aprod :: AbstractProduct) = error("not implemented")
 # iteration utilities #
 #######################
 
-Base.first(s :: AbstractSegment) = first(iterator(s))
-Base.last(s :: AbstractSegment) = last(iterator(s))
-Base.iterate(s :: FinSet) = iterate(iterator(s))
-Base.iterate(s :: FinSet, state) = iterate(iterator(s), state)
-Base.length(s :: FinSet) = length(iterator(s))
-Base.ndims(s :: FinSet) = ndims(iterator(s))
-Base.size(s :: FinSet) = size(iterator(s))
+first(s :: AbstractSegment) = first(iterator(s))
+last(s :: AbstractSegment) = last(iterator(s))
+iterate(s :: FinSet) = iterate(iterator(s))
+iterate(s :: FinSet, state) = iterate(iterator(s), state)
+length(s :: FinSet) = length(iterator(s))
+ndims(s :: FinSet) = ndims(iterator(s))
+size(s :: FinSet) = size(iterator(s))
 
 proj(aprod :: AbstractProduct, i) = factors(aprod)[i]
-Base.getindex(aprod :: AbstractProduct, i) = proj(aprod, i)
+getindex(aprod :: AbstractProduct, i) = proj(aprod, i)
 
 
 
@@ -39,9 +39,6 @@ Base.getindex(aprod :: AbstractProduct, i) = proj(aprod, i)
 #####################
 include("finsets/segment.jl")
 include("finsets/direct_prod.jl")
-include("finsets/bool_cube.jl")
-
-
 
 
 

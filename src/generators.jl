@@ -4,14 +4,20 @@ abstract type AbstractResidueGenerator <: DiscreteFunctionGenerator end
 const DFGen = DiscreteFunctionGenerator
 const ARGen = AbstractResidueGenerator
 
-# structures -- generators
-"""
-Generates all boolean function of arity = n
-"""
-struct BooleanGenerator{F} <: DiscreteFunctionGenerator
-    itr :: UnitRange{Int}
-    f :: BooleanFunction{F}
+# other useful functions #
+Base.length(gen :: DFGen) = prod(big.(length.(gen.itr.iterators)))
+# number of functions A → B
+nfuns(dom :: FinSet, codom :: FinSet) = length(codom)^(length(dom))
+domain(gen :: DFGen) = domain(gen.f)
+codomain(gen :: DFGen) = codomain(gen.f)
+
+
+# get n'th element of iterator
+function Base.getindex(gen :: DFGen, i :: Int)
+    return nth(gen, i)
 end
+
+# structures -- generators
 
 """
 Generates all function of type 
@@ -54,7 +60,6 @@ struct FunTuplingGenerator{IT, N, T, D, R} <: DFGen
     f :: FunTupling{N, T, D, R}
 end
 
-const BoolGen = BooleanGenerator
 const ResGen = ResidueGenerator
 const ExtGen = ExtendedResidueGenerator
 const FTGen = FunTuplingGenerator
@@ -63,18 +68,6 @@ const FXGens = Union{FPGen, FTGen}
 
 
 # construction of generators #
-
-
-# Boolean generators #
-# from arity
-function BoolGen(arity :: Int)
-    itr = 0 : (2^(2^arity) - 1)
-    f = BooleanFunction(arity)
-    return BoolGen(itr, f)
-end
-# from bool cube
-BoolGen(bc :: BooleanCube) = BoolGen(ndims(bc))
-
 
 # Residue generators #
 # from two integers [0 .. from-1] → [0 .. to-1]
@@ -140,16 +133,6 @@ function FTGen(from :: NTuple{N, Int}, to :: NTuple{M, Int}) where {N, M}
     return FTGen(dom, codom)
 end
 
-
-
-# iteration utilities #
-function itstep(ctr, gen :: BoolGen)
-    value = ctr[1]
-    state = ctr[2]
-    fill_bits!(gen.f.m, value)
-    return (gen.f, state)
-end
-
 function itstep(ctr, gen :: ARGen)
     value = ctr[1]
     state = ctr[2]
@@ -181,8 +164,6 @@ end
 
 itstep(:: Nothing, gen) = nothing
 
-Base.iterate(gen :: BoolGen) = itstep(iterate(gen.itr), gen)
-Base.iterate(gen :: BoolGen, state) = itstep(iterate(gen.itr, state), gen)
 Base.iterate(gen :: ARGen) = itstep(iterate(gen.itr), gen)
 Base.iterate(gen :: ARGen, state) = itstep(iterate(gen.itr, state), gen)
 Base.iterate(gen :: FXGens) = itstep(iterate(gen.itr), gen)
@@ -192,17 +173,3 @@ Base.iterate(gen :: FXGens, state) = itstep(iterate(gen.itr, state), gen)
 itstep(n :: Nothing, gen :: FTGen) = nothing
 itstep(n :: Nothing, gen :: FPGen) = nothing
 =#
-
-
-# other useful functions #
-Base.length(gen :: DFGen) = prod(big.(length.(gen.itr.iterators)))
-# number of functions A → B
-nfuns(dom :: FinSet, codom :: FinSet) = length(codom)^(length(dom))
-domain(gen :: DFGen) = domain(gen.f)
-codomain(gen :: DFGen) = codomain(gen.f)
-
-
-# get n'th element of iterator
-function Base.getindex(gen :: DFGen, i :: Int)
-    return nth(gen, i)
-end
