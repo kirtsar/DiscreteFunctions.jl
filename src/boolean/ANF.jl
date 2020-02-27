@@ -60,7 +60,7 @@ function ANF(f :: BoolFun)
     mons = Vector{Monom}([])
     for x in dom
         ys = filter(t -> (t <= x), dom)
-        ha = sum(f, ys) % 2
+        ha = sum(x -> value(f(x)), ys) % 2
         if ha == 1
             push!(mons, Monom(x))
         end
@@ -93,8 +93,7 @@ end
 # given bool map
 # construct ANF
 function ANF(fs :: BoolMap)
-    mat = mat_repr(fs)
-    anfs = [ANF(BoolFun(mat[:, i])) for i in 1 : ndims(codomain(fs))]
+    anfs = [ANF(proj(fs, i)) for i in 1 : nfuns(fs)]
     return anfs
 end
 

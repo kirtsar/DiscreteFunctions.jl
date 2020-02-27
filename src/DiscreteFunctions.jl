@@ -11,7 +11,7 @@ import Base: show, first, last, iterate, size, length, ndims,
 export Segment, DirectProduct, BooleanCube
 export DiscreteFunction, ResidueFunction, ExtendedResidueFunction, BooleanFunction
 export FunProduct, FunTupling
-export table, tablegen, tabledict
+export tablegen
 export domain, codomain
 export BooleanGenerator, ResidueGenerator, ExtendedResidueGenerator
 export FunProductGenerator, FunTuplingGenerator
